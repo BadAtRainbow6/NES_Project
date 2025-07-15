@@ -318,6 +318,24 @@ not_left:
     RTS                       ; Return to caller
 .endproc
 
+.proc bounce_sfx
+    ; Re-enable channels in case they were disabled
+    LDA #$0F
+    STA $4015            ; Enable all standard sound channels
+
+    ; Noise channel settings
+    LDA #%00110000       ; Constant volume = $10, envelope disabled
+    STA $400C            ; Noise volume/envelope
+
+    LDA #%00010011       ; Short mode, period index = 3 (not too high)
+    STA $400E            ; Noise frequency
+
+    LDA #%10000000       ; Load length counter, initiate sound
+    STA $400F            ; Trigger noise burst
+
+    RTS
+.endproc
+
 .proc update_ball
 ; now move our ball
 	lda ball_y
@@ -326,12 +344,14 @@ not_left:
 	sta ball_y
 	cmp #0 ; have we hit the top border
 	bne NOT_HITTOP
+    jsr bounce_sfx
 		lda #1 ; reverse direction
 		sta ball_dy
   NOT_HITTOP:
 	lda ball_y
 	cmp #210 ; have we hit the bottom border
 	bne NOT_HITBOTTOM
+    jsr bounce_sfx
 		lda #$FF ; reverse direction (-1)
 		sta ball_dy
   NOT_HITBOTTOM:
@@ -341,12 +361,14 @@ not_left:
 	sta ball_x
 	cmp #0 ; have we hit the left border
 	bne NOT_HITLEFT
+    jsr bounce_sfx
 		lda #1 ; reverse direction
 		sta ball_dx
   NOT_HITLEFT:
 	lda ball_x
 	cmp #248 ; have we hit the right border
 	bne NOT_HITRIGHT
+    jsr bounce_sfx
 		lda #$FF ; reverse direction (-1)
 		sta ball_dx
   NOT_HITRIGHT:
