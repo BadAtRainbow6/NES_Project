@@ -407,14 +407,24 @@ copy_sprite_data:
     STA $4015            ; Enable all standard sound channels
 
     ; Noise channel settings
-    LDA #%00010100       ; Bit 7: Loop, Bit 6:
+    LDA #%00010100       ; $400C, Used to control volume and looping
+    ;     ^--------------- Bit 7: Unused
+    ;      ^-------------- Bit 6: Used to set the envelope or not (Envelope causes fade out of sound)
+    ;       ^------------- Bit 5: Used to set loop (If envelope is set loops sound, otherwise it is a constant sound.) (If unset, plays once and stops after time from $400F)
+    ;        ^^^^^-------- Bits 4-0: Used to set volume or envelope decay rate (if Bit 6 is 0, these are used for volume, with a max of 15. Otherwise, it is used to determine how fast the sound decays.)
     STA $400C
 
-    LDA #%00010011       ; Short mode, period index = 3 (not too high)
-    STA $400E            ; Noise frequency
+    LDA #%00001011       ; $400E, used to control the mode and pitch
+    ;     ^--------------- Bit 7: Sets mode, 1 for metallic, 0 for white noise
+    ;      ^^------------- Bits 6 & 5: Unused, should be set to 0
+    ;        ^------------ Bit 4: Can be set to change the texture of the sound, depending on the mode.
+    ;         ^^^^-------- Bits 3-0: Sets the pitch of the noise (max 15)
+    STA $400E
 
-    LDA #%10000000       ; Load length counter, initiate sound
-    STA $400F            ; Trigger noise burst
+    LDA #%10000000       ; $400F, used to control the length of the sound
+    ;     ^--------------- Bit 7: MUST be 1 or else no sound will play
+    ;      ^^^^^^^-------- Bits 6-0: Controls the length of the sound (technically ignores 6, but is here for read/write purposes)
+    STA $400F
 
     RTS
 .endproc
